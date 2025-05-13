@@ -51,7 +51,7 @@ straightforward to reason about.
 Most modern identity systems work like a high-security bank. Every time you
 want to do anything — open a door, access a file, make a request — someone
 calls a central security desk to ask, *“Is this person allowed to do this?”* If
-the directory is down or the guard is on break, the system stops.
+the phones are down or the guard is on break, the system stops.
 
 Vouchsafe is more like a festival. You show your ID once at the gate, buy your
 beer tokens, and from then on you just hand over tokens when you need
@@ -151,7 +151,7 @@ Reach out at [dev@ionzero.com](mailto:dev@ionzero.com)
 
 ## About
 
-Vouchsafe was created by [Jay Kuri](https://github.com/jaykuri) and is
+Vouchsafe was created by [Jay Kuri](https://github.com/jayk) and is
 maintained by [Ionzero](https://ionzero.com), a software engineering firm
 focused on durable development and secure, scalable systems for decentralized 
 and trust-sensitive applications.
