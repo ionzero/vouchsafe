@@ -381,7 +381,7 @@ A token that asserts trust in a previously issued Vouchsafe token. This enables 
 | `iss_key` | Base64-encoded public key that MUST match the `iss` identifier and verify the token signature. |
 | `jti`     | Unique identifier for this vouch token (UUID).                                                 |
 | `sub`     | MUST be the `jti` of the Vouchsafe token being vouched for.                                    |
-| `vch_iss` | MUST match the `iss` of the token being vouched for.                                           |
+| `vch_iss` | MUST match the `iss` of the token being vouched for. MUST be different from `iss`              |
 | `vch_sum` | MUST be the content hash of the full target token (including header and signature).            |
 | `iat`     | UNIX timestamp when this token was issued.                                                     |
 | `kind`    | MUST be `"vch"`.                                                                               |
@@ -407,6 +407,11 @@ A token that asserts trust in a previously issued Vouchsafe token. This enables 
 * Chained delegation MAY be implemented by issuing vouches that reference other
   Vouchsafe vouch tokens. In such chains, `purpose` filtering applies at each
   link (see Section 9).
+* Vouch tokens MUST NOT vouch for another token issued by the same iss.  If a
+  revision is needed, the correct approach is to issue a revocation targeting
+  the original vouch, followed by a new vouch for the same subject token.
+  Alternatively, multiple vouches for the original token may coexist if they
+  serve different purposes. 
 
 ### Example
 
@@ -439,10 +444,10 @@ specific subject.
 | `iss`     | MUST be a valid Vouchsafe URN. Identifies the signer of the revocation.                                   |
 | `iss_key` | Base64-encoded public key that MUST match the `iss` identifier and verify the token signature.            |
 | `jti`     | Unique identifier for this revocation token (UUID).                                                       |
-| `sub`     | MUST match the `sub` of the token(s) being revoked.                                                       |
+| `sub`     | `jti` of the original target of the previous vouch. MUST match the `sub` of the token(s) being revoked.   |
 | `revokes` | MUST be either the `jti` of a specific vouch token or the string `"all"` to revoke all vouches for `sub`. |
-| `vch_iss` | MUST match the `vch_iss` of the token(s) being revoked.                                                   |
-| `vch_sum` | MUST match the `vch_sum` of the token(s) being revoked.                                                   |
+| `vch_iss` | `iss` of the original target of the previous vouch. MUST match the `vch_iss` of token(s) being revoked.   |
+| `vch_sum` | Hash of the original target of the previous vouch. MUST match the `vch_sum` of token(s) being revoked.    |
 | `iat`     | UNIX timestamp when this token was issued.                                                                |
 | `kind`    | MUST be `"vch"`.                                                                                          |
 
@@ -951,6 +956,10 @@ revoke the prior token and issue a new token with revised parameters.
 ---
 
 ## Appendix A. Changelog
+
+### Version 1.3.1 - 2025-05-16
+
+* Update spec to clarify that vouching for your own vouch is forbidden.
 
 ### Version 1.3 — 2025-05-10
 
