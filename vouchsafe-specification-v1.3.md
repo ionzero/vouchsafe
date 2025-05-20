@@ -346,7 +346,8 @@ external token. The statement exists entirely within the token itself.
 * The `sub` field MUST equal the token’s own `jti`. This indicates that the
   attestation refers to itself, rather than a separate subject token.
 * The `vch_iss` claim identifies the entity being attested to. It MAY be a
-  Vouchsafe URN or other identity format depending on the application.
+  Vouchsafe URN or other identity format depending on the application. It MAY 
+  be the same as the `iss` field.
 * The token MAY include arbitrary claims that assert attributes or facts about
   the subject.
 * The `purpose` claim MAY be used to scope or categorize the statement.
