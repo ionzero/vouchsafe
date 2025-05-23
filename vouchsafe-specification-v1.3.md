@@ -462,6 +462,8 @@ specific subject.
 * Revocation tokens MUST be evaluated in conjunction with the original vouch token. A revoked vouch MUST be treated as invalid, even if it would otherwise be valid.
 * Revocation does not modify the target token itself; it modifies the trust assertion previously made about it.
 * Revocation tokens MUST NOT include an exp claim. Revocations take effect immediately upon issuance and are permanent.
+* if `nbf` is provided, the revoke MUST NOT be considered in trust chain evaluations until that time.
+* Additional claims SHOULD NOT be added to revoke tokens.
 
 
 ### Example
