@@ -86,7 +86,7 @@ except revoke tokens.
 token with a malformed or non-UUID `jti`.
 
 * The `sub` claim identifies the subject of the trust assertion. The value and
-  semantics of this field depend on the token’s type.
+  semantics of this claim depend on the token’s type.
 
 * The `kind` claim provides a format discriminator. This specification defines
   only the value `"vch"`.
@@ -304,7 +304,7 @@ systems.
   "jti": "16db370d-96bb-432c-94b4-19d5808780ec",
   "sub": "b81b6e6d-c24e-4c9e-b37f-d8a12a5e7609",
   "vch_iss": "user@example.com",
-  "vch_sum": "sha256:3e9a...e7d5",
+  "vch_sum": "3e9a...e7d5",
   "purpose": "identity-verification",
   "iat": 1714600000,
   "kind": "vch"
@@ -343,15 +343,16 @@ external token. The statement exists entirely within the token itself.
 
 ### Semantics
 
-* The `sub` field MUST equal the token’s own `jti`. This indicates that the
+* The `sub` claim MUST equal the token’s own `jti`. This indicates that the
   attestation refers to itself, rather than a separate subject token.
 * The `vch_iss` claim identifies the entity being attested to. It MAY be a
   Vouchsafe URN or other identity format depending on the application. It MAY 
-  be the same as the `iss` field.
+  be the same as the `iss` claim.
 * The token MAY include arbitrary claims that assert attributes or facts about
   the subject.
 * The `purpose` claim MAY be used to scope or categorize the statement.
-* No `vch_sum` is required, as there is no referenced token being vouched for.
+* The `vch_sum` claim MUST NOT be present, as there is no referenced token being vouched for.
+* The `revokes` claim MUST NOT be present, as there is no referenced token being revoked.
 
 ### Example
 
@@ -401,7 +402,7 @@ A token that asserts trust in a previously issued Vouchsafe token. This enables 
 ### Semantics
 
 * This token references a Vouchsafe token by its `jti`, `vch_iss`, and `vch_sum`.
-* The `vch_sum` field MUST be a content hash of the full target token,
+* The `vch_sum` claim MUST be a content hash of the full target token in it's encoded form,
   including all header and payload fields and its signature.
 * Trust is scoped to the exact token referenced; if the referenced token is
   modified or reissued with a new `jti`, the vouch does not apply.
@@ -423,7 +424,7 @@ A token that asserts trust in a previously issued Vouchsafe token. This enables 
   "jti": "4a42c211-8a3c-497d-8a1f-6459fe038301",
   "sub": "c27ae541-d251-4f21-a360-c3b771e3e8a2",
   "vch_iss": "urn:vouchsafe:carol.7b5xkrjq1d3xvsmddq6d58vccu7n07na",
-  "vch_sum": "sha256:a9b4f6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
+  "vch_sum": "a9b4f6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
   "purpose": "msg-signing",
   "iat": 1714608000,
   "kind": "vch"
@@ -476,7 +477,7 @@ specific subject.
   "sub": "c27ae541-d251-4f21-a360-c3b771e3e8a2",
   "revokes": "4a42c211-8a3c-497d-8a1f-6459fe038301",
   "vch_iss": "urn:vouchsafe:carol.7b5xkrjq1d3xvsmddq6d58vccu7n07na",
-  "vch_sum": "sha256:a9b4f6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
+  "vch_sum": "a9b4f6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
   "iat": 1714609000,
   "kind": "vch"
 }
@@ -495,7 +496,7 @@ This section provides a complete list of all claims defined in the Vouchsafe tok
 | `jti`             | string | Unique token ID (UUID, lowercase w/ hyphens).              | All tokens                        | Target of `revokes`; anchor for trust                  |
 | `sub`             | string | Subject of the vouch or attestation.                       | All tokens                        | Interpretation varies by type                          |
 | `vch_iss`         | string | Identity of the subject token being vouched for.           | Vouch, Revocation, Attestation    | Required for all but chained attestations              |
-| `vch_sum`         | string | Content hash of the subject token (e.g., `sha256:...`).    | Vouch, Revocation                 | Ensures token integrity                                |
+| `vch_sum`         | string | Content hash of the subject token                          | Vouch, Revocation                 | Ensures token integrity                                |
 | `revokes`         | string | Target of revocation: either a vouch `jti`, or `"all"`.    | Revocation only                   | Must refer to vouch by same `iss`                      |
 | `iat`             | number | Issued-at timestamp (UNIX).                                | All tokens                        | Used for ordering, expiration, revocation              |
 | `kind`            | string | MUST be `"vch"` for Vouchsafe tokens.                      | All tokens                        | Identifies token format                                |
@@ -650,7 +651,7 @@ Each string:
 
 The meaning of each purpose string is application-defined. Vouchsafe does not impose semantics on `purpose` values and does not interpret them as permissions, capabilities, roles, or identifiers. Implementations MAY define their own conventions or purpose vocabularies.
 
-In multi-hop delegation chains, Vouchsafe verifiers apply intersectional filtering over all declared `purpose` values. A string is considered valid only if it appears in every token that includes a `purpose` claim. Tokens that omit the `purpose` field do not constrain the set but also do not expand it.
+In multi-hop delegation chains, Vouchsafe verifiers apply intersectional filtering over all declared `purpose` values. A string is considered valid only if it appears in every token that includes a `purpose` claim. Tokens that omit the `purpose` claim do not constrain the set but also do not expand it.
 
 This mechanism enables trust filtering without enforcing a specific purpose model.
 
@@ -668,7 +669,7 @@ custom-use-case_42
 
 ### 9.2 Purpose Evaluation in Delegated Chains
 
-When evaluating a chain of Vouchsafe tokens that includes the `purpose` claim, verifiers MUST apply intersectional filtering. The resulting set of valid `purpose` values is the set of strings that appear in **every** `purpose` field in the chain.
+When evaluating a chain of Vouchsafe tokens that includes the `purpose` claim, verifiers MUST apply intersectional filtering. The resulting set of valid `purpose` values is the set of strings that appear in **every** `purpose` claim in the chain.
 
 The following rules apply:
 
@@ -741,7 +742,7 @@ verified identity.
   "iss_key": "BASE64ENCODEDKEY==",
   "sub": "f197e71d-bfe3-4263-b238-6fe8b9dcb7f0",
   "vch_iss": "user@example.com",
-  "vch_sum": "sha256:c8c0f6c60b0bb17a3b16205e1c6c0676019998b7c206372f1128dc37018fa231",
+  "vch_sum": "c8c0f6c60b0bb17a3b16205e1c6c0676019998b7c206372f1128dc37018fa231",
   "purpose": "email-verification",
   "iat": 1714600000
 }
@@ -754,7 +755,7 @@ verified identity.
 **Scenario:**
 A payment processor issues a Vouchsafe attestation indicating that a user
 completed a successful payment. The attestation includes purpose scoping and
-additional application-defined fields.
+additional application-defined claims.
 
 **Attestation Token Claims:**
 
@@ -793,7 +794,7 @@ A Vouchsafe token is issued to assert trust in another signed Vouchsafe token. T
   "jti": "e8b9adfa-6c3e-41e3-a660-031047d422cb",
   "sub": "b7e9c0c2-8f7e-4c90-a4ab-1442a4f432e5",
   "vch_iss": "urn:vouchsafe:agent.4dkf0g2wue68xhzxnslkh9sbk08e4a9b",
-  "vch_sum": "sha256:a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
+  "vch_sum": "a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
   "purpose": "msg-signing",
   "iat": 1714602000,
   "kind": "vch"
@@ -818,7 +819,7 @@ issuer. The revocation is scoped to the specific token identified by its `jti`.
   "sub": "b7e9c0c2-8f7e-4c90-a4ab-1442a4f432e5",
   "revokes": "e8b9adfa-6c3e-41e3-a660-031047d422cb",
   "vch_iss": "urn:vouchsafe:agent.4dkf0g2wue68xhzxnslkh9sbk08e4a9b",
-  "vch_sum": "sha256:a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
+  "vch_sum": "a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
   "iat": 1714603000,
   "kind": "vch"
 }
@@ -834,24 +835,26 @@ This section contains supporting information for implementers, including encodin
 
 ### 11.1 Hashing and Encoding Standards
 
-Vouchsafe tokens use cryptographic hash functions to bind identities and token
+Vouchsafe tokens use cryptographic hash functions to bind token
 contents. The following conventions apply:
 
-* The hash algorithm used in this specification is **SHA-256**.
-* Hash outputs MUST be encoded using lowercase, unpadded Base32, as defined in [RFC 4648, Section 6](https://datatracker.ietf.org/doc/html/rfc4648#section-6).
+* The hash algorithm used in this specification is **SHA-256** unless otherwise specified.
+* Hash outputs MUST be encoded using lowercase, hexadecimal.
 * Hash values MUST be expressed using the `vch_sum` claim in the following format:
 
 ```
-sha256:<base32-encoded-hash>
+<hexadecimal-encoded-hash>[.algorithm]
 ```
 
-The `<base32-encoded-hash>` portion MUST be lowercase and MUST NOT include
-padding.
+The `<hexadecimal-encoded-hash>` portion MUST be lowercase. The algorithm, if omitted,
+is assumed to be sha256. 
 
-#### Example
+#### Examples
 
 ```
-sha256:a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530
+a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530
+
+a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530.sha256
 ```
 
 All compliant implementations MUST support `sha256`. Support for alternate hash
@@ -890,7 +893,7 @@ To validate a Vouchsafe URN:
 1. Base64-decode the `iss_key` claim to obtain the public key bytes.
 2. Compute the SHA-256 hash of those bytes.
 3. Encode the result using unpadded, lowercase Base32.
-4. Confirm that the encoded hash matches the hash portion of the `iss` field.
+4. Confirm that the encoded hash matches the hash portion of the `iss` claim.
 
 If the computed hash does not match the URN, the token MUST be rejected.
 
@@ -937,7 +940,7 @@ cryptographically verifiable trust statements. All tokens are self-contained
 and signed using public-key cryptography.
 
 Verifiers MUST reject any token that fails signature verification, has
-inconsistent or malformed fields, or contains an `iss` value that does not
+inconsistent or malformed claim, or contains an `iss` value that does not
 match the derived hash of the public key in `iss_key`.
 
 To maintain trust integrity and prevent misuse, implementations SHOULD:
@@ -945,7 +948,7 @@ To maintain trust integrity and prevent misuse, implementations SHOULD:
 * Enforce strict validation of all required claims by token type.
 * Reject tokens with malformed or duplicate `jti` values.
 * Limit the depth of delegation chains to prevent resource exhaustion.
-* Treat tokens with expired `exp` fields as invalid.
+* Treat tokens with expired `exp` claim as invalid.
 * Reject revocation tokens that conflict or ambiguously overlap with valid vouches.
 
 Vouchsafe tokens cannot form recursive or speculative trust chains. Because
