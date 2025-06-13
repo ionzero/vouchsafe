@@ -27,8 +27,6 @@ Vouchsafe just gives you a way to **create persistent identities that don't
 need a central database to work** and to **pass around trust in a portable,
 verifiable way**.
 
----
-
 ## Why Vouchsafe?
 
 Vouchsafe is designed for systems where identity and trust need to move freely
@@ -61,8 +59,6 @@ don’t need to be looked up.
 
 That’s the difference: with Vouchsafe, **trust travels with the user.**
 
----
-
 ## The Portable Trust Layer
 
 Trust is fundamental to most systems — even simple ones. But trust is often
@@ -76,8 +72,6 @@ systems, across keys, and even across time.
 - **Chaining** — “This token trusts another token, and so on.”
 - **Interoperability** — No ecosystem, app or company lock-in. Works in any
   JWT-friendly system.
-
----
 
 ## Core Components
 
@@ -108,8 +102,6 @@ Each token includes the issuer’s identity and key, the subject of the trust
 statement, and an optional purpose — all verifiable offline using standard
 cryptographic tools. They are fully compatible with JWT libraries.
 
----
-
 ## Example Use Cases
 
 - Replace account-based login with cryptographic identity  
@@ -120,8 +112,6 @@ cryptographic tools. They are fully compatible with JWT libraries.
 - Enable peer-to-peer or offline systems to verify credentials  
 - Revoke previously granted access without maintaining state  
 - Link external systems using a common, verifiable identity format  
-
----
 
 ## Specifications
 
@@ -135,7 +125,16 @@ The following documents define the Vouchsafe model:
 
 *Language libraries and CLI tools coming soon.*
 
----
+## Implementations
+
+Vouchsafe is largely built on JWT. As such, any language with JWT support can
+support vouchsafe without a dedicated module by simply evaluating the claims in
+vouchsafe tokens. That said, some things (such as trust chain verification) are
+easier with dedicated libraries. The reference javascript implementation is
+below. Please contact us if you are working on a module for another language 
+and we will be happy to link to it here.
+
+- [Javascript](https://github.com/ionzero/vouchsafe-js)
 
 ## Get Involved
 
@@ -156,8 +155,6 @@ maintained by [Ionzero](https://ionzero.com), a software engineering firm
 focused on durable development and secure, scalable systems for decentralized 
 and trust-sensitive applications.
 
----
-
 ## License
 
 Vouchsafe is an open system designed for broad adoption and interoperability.
@@ -167,8 +164,6 @@ Vouchsafe is an open system designed for broad adoption and interoperability.
 
 All parts of the system are free to use, inspect, and extend. We believe trust
 infrastructure should be transparent, verifiable, and resistant to capture.
-
----
 
 © 2025 Jay Kuri / Ionzero.  
 For questions, feedback, or integrations, contact [dev@ionzero.com](mailto:dev@ionzero.com)
