@@ -43,6 +43,7 @@ Where:
 
 The label component of the URN:
 
+* MUST be a minimum of 3 characters in length.
 * MAY be up to 32 characters in length.
 * MAY include the following ASCII characters:
   `a–z`, `A–Z`, `0–9`, hyphen (`-`), underscore (`_`), percent (`%`), plus (`+`)
