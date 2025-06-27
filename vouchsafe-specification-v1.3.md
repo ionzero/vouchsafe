@@ -1,10 +1,10 @@
 # Vouchsafe Token Format Specification
 
 **Author:** Jay Kuri 
-**Organization:** Ionzero  
-**Date:** 2025-05-03  
-**Version:** 1.3  
-**Vouchsafe ID:** *(to be added: `urn:vouchsafe:jaykuri.<base32-hash>`)*
+**Organization:** Ionzero
+**Date:** 2025-06-27
+**Version:** 1.3.1
+**Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla
 
 ## 1. Introduction
 
@@ -829,7 +829,8 @@ issuer. The revocation is scoped to the specific token identified by its `jti`.
 
 ## 11. Appendices
 
-This section contains supporting information for implementers, including encoding formats, hash computation, and Vouchsafe URN structure.
+This section contains supporting information for implementers, including
+encoding formats, hash computation, and Vouchsafe URN structure.
 
 ---
 
@@ -860,10 +861,6 @@ a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530.sha256
 All compliant implementations MUST support `sha256`. Support for alternate hash
 algorithms is not defined in this version of the specification and MAY be
 introduced in a future revision.
-
----
-
-### ✅ Revised Section 11.2 – Vouchsafe URN Format (with Reference)
 
 ---
 
