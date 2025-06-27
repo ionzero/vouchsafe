@@ -1,10 +1,10 @@
 # Vouchsafe Identity Specification
 
-**Version:** 1.3
-**Date:** 2025-06-27
-**Author:** Jay Kuri
-**Organization:** Ionzero
-**Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla
+**Version:** 1.3.1  
+**Date:** 2025-06-27  
+**Author:** Jay Kuri  
+**Organization:** Ionzero  
+**Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla  
 
 ---
 

@@ -1,10 +1,10 @@
 # Vouchsafe Token Format Specification
 
-**Author:** Jay Kuri 
-**Organization:** Ionzero
-**Date:** 2025-06-27
-**Version:** 1.3.1
-**Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla
+**Author:** Jay Kuri  
+**Organization:** Ionzero  
+**Date:** 2025-06-27  
+**Version:** 1.3.1  
+**Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla  
 
 ## 1. Introduction
 
