@@ -492,7 +492,8 @@ applications handle trust policy and revocation at the application level.
 ### Version 1.3.1 - 2025-06-27
 
 * Clarify minimum length for urn label
-* Formatting changes 
+* Clean up formatting 
+* Add author URN
 
 ### Version 1.0 — 2025-05-10
 

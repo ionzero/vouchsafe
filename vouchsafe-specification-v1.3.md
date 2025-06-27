@@ -960,9 +960,11 @@ revoke the prior token and issue a new token with revised parameters.
 
 ## Appendix A. Changelog
 
-### Version 1.3.1 - 2025-05-16
+### Version 1.3.1 - 2025-06-27
 
 * Update spec to clarify that vouching for your own vouch is forbidden.
+* Clean up formatting
+* Add author URN
 
 ### Version 1.3 — 2025-05-10
 
