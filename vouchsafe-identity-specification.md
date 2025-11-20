@@ -76,6 +76,9 @@ However, only the hash portion is used during cryptographic validation. It MUST
 match the hash of the raw public key bytes extracted from the `iss_key` field
 when verifying tokens.
 
+The `iss_key` MUST be the DER-encoded public key corresponding to the
+identity’s private key.  Verifiers MUST extract the raw key bytes from the DER
+structure exactly as defined in RFC 8032 S-5.1.5.
 
 ### 2.2 Hash Format
 
@@ -104,16 +107,10 @@ Applications that wish to display the label SHOULD attempt to decode the label
 component using standard URL decoding logic. If decoding fails, the raw label
 string SHOULD be displayed as-is.
 
-A RECOMMENDED visual representation format is:
-
-```
-<label>.<prefix>
-```
-
-Where `<label>` is the URL-decoded label (if successful), and `<prefix>` is the
-first 4 to 6 characters of the `hash` portion of the URN. This allows users to
-visually distinguish between identities while preserving the recognizable
-label.
+Since the entire URN is needed for disambiguation, it is recommended that
+wherever possible the entire URN is displayed. In cases where this is 
+not viable, it is recommended that the label + at least 6 characters of the `hash`
+portion are displayed and access to the full URN is possible via additional action.  
 
 ---
 
@@ -162,9 +159,9 @@ should be hashed using SHA-256 and MUST NOT provide a suffix.
    [RFC 8032 §5.1.5](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.5).
 
 2. **Extract the raw key bytes.**
-   Strip away any encoding layers such as DER, PEM, or ASN.1 wrappers. The
-   resulting byte sequence MUST contain only the core public key material (e.g.,
-   32 bytes for Ed25519).
+   Strip away any encoding layers such as DER wrappers. The resulting byte
+   sequence MUST contain only the core public key material (e.g., 32 bytes for
+   Ed25519).
 
 3. **Hash the raw key bytes.**
    Compute the digest using the SHA-256 algorithm (or another supported
@@ -209,9 +206,7 @@ To validate a Vouchsafe URN:
    first `.` delimiter. This is the expected hash value.
 
 2. **Decode the public key.**
-   Base64-decode the `iss_key` field to obtain the underlying key material.
-   This MUST be a DER-encoded public key consistent with the algorithm used to
-   generate the URN.
+   Base64-decode `iss_key` to obtain the DER-encoded Ed25519 SubjectPublicKeyInfo structure.
 
 3. **Extract the raw key bytes.**
    From the DER-encoded structure, extract the canonical raw key bytes (e.g.,
