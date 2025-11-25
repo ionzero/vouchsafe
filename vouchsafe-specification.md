@@ -199,20 +199,10 @@ These fields **MUST** be present in all Vouchsafe tokens (`kind: "vch"`), and
 
 The `jti` claim provides a stable, unique reference to a specific token instance.
 
-For Vouchsafe tokens:
-
 * **MUST** be a valid UUID (version 4 or 7 recommended)
 * **MUST** use lowercase hexadecimal with hyphens (e.g., `"6fa459ea-ee8a-3ca4-894e-db77e160355e"`)
 * **MUST NOT** collide with other tokens issued by the same `iss`
 * Enables targeted revocation, caching, indexing, and auditability
-
-For non-Vouchsafe tokens referred to by `sub` in a vouchsafe token:
-
-* **MUST** exist and have a unique value.
-* **SHOULD** be a UUID to maximize compatibility with Vouchsafe-based trust tooling
-* **MAY** use other unique formats if constrained by the host application
-
-JWTs that do not have a `jti` field can not be the subject of a vouchsafe token.
 
 ---
 
@@ -233,9 +223,10 @@ The recognized token types are:
 
 ## 6.1 Vouchsafe Attestation
 
-A token that allows a Vouchsafe identity to assert verifiable claims about
-another identity or subject. Unlike vouches, attestations do not reference an
-external token. The statement exists entirely within the token itself.
+A token that allows a Vouchsafe identity to assert verifiable claims.
+Attestations are self-referential and MAY include wrapped external data.
+Unlike vouches, attestations do not reference an external token. The statement
+exists entirely within the token itself.
 
 ### Required Claims
 
@@ -264,8 +255,8 @@ external token. The statement exists entirely within the token itself.
 
 * The `sub` claim MUST equal the token’s own `jti`. This indicates that the
   attestation refers to itself, rather than a separate subject token.
-* The token MAY include arbitrary claims that assert attributes or facts about
-  the subject.
+* The token MAY include arbitrary claims that assert attributes or facts
+  declared by the issuer, optionally including wrapped external data.
 * The `purpose` claim MAY be used to scope or categorize the statement.
 * The `vch_iss` claim MUST NOT be present, as there is no referenced token being vouched for.
 * The `vch_sum` claim MUST NOT be present, as there is no referenced token being vouched for.
@@ -279,7 +270,6 @@ external token. The statement exists entirely within the token itself.
   "iss_key": "BASE64ENCODEDPUBLICKEY==",
   "jti": "90e98ed2-2b24-4a22-9985-35a2f23875b4",
   "sub": "90e98ed2-2b24-4a22-9985-35a2f23875b4",
-  "vch_iss": "urn:vouchsafe:subject.88f13bckjs22a1cwu4txae6cpb9a",
   "purpose": "email-verification",
   "email": "user@example.com",
   "iat": 1714605000,
@@ -289,7 +279,10 @@ external token. The statement exists entirely within the token itself.
 
 ## 6.2 Vouch for Another Vouchsafe Token
 
-A token that asserts trust in a previously issued Vouchsafe token. This enables recursive delegation of trust across multiple identities and permits construction of verifiable trust graphs.
+A token that asserts trust in a previously issued Vouchsafe token. This enables
+recursive delegation of trust across multiple identities and permits
+construction of verifiable trust graphs. 
+
 
 ### Required Claims
 
@@ -330,6 +323,8 @@ A token that asserts trust in a previously issued Vouchsafe token. This enables 
   the original vouch, followed by a new vouch for the same subject token.
   Alternatively, multiple vouches for the original token may coexist if they
   serve different purposes. 
+* Vouch tokens may only vouch for other Vouchsafe tokens. Non-Vouchsafe tokens
+  MUST be wrapped inside attestations and cannot appear as `sub` in vouch tokens.
 
 ### Example
 
@@ -466,7 +461,7 @@ This section provides a complete list of all claims defined in the Vouchsafe tok
 | `iss_key`         | string | Base64-encoded DER encoded public key matching `iss`.                  | All tokens                        | Verifies signature and proves identity                 |
 | `jti`             | string | Unique token ID (UUID, lowercase w/ hyphens).              | All tokens                        | Target of `revokes`; anchor for trust                  |
 | `sub`             | string | Subject of the vouch or attestation.                       | All tokens                        | Interpretation varies by type                          |
-| `vch_iss`         | string | Identity of the subject token being vouched for.           | Vouch, Revocation, Attestation    | Required for all but chained attestations              |
+| `vch_iss`         | string | Identity of the subject token being vouched for.           | Vouch, Revocation                 |                                                        |
 | `vch_sum`         | string | Content hash of the subject token                          | Vouch, Revocation                 | Ensures token integrity                                |
 | `revokes`         | string | Target of revocation: either a vouch `jti`, or `"all"`.    | Revocation only                   | Must refer to vouch by same `iss`                      |
 | `burns`           | string | MUST equal `iss`           | Burn only                     | Must be same as `iss`, Burns act on the issuer's identity only.                            |
@@ -524,7 +519,6 @@ Example pattern:
   "iss_key": "BASE64...",
   "jti": "UUID",
   "sub": "UUID",
-  "vch_iss": "external-source",
   "purpose": "integration",
   "wrapped": {
     "external_token": "<opaque external token>"
@@ -553,7 +547,6 @@ Example pattern:
   "iss_key": "BASE64...",
   "jti": "UUID",
   "sub": "UUID",
-  "vch_iss": "external-source",
   "purpose": "integration",
   "wrapped": {
     "external_ref": {
@@ -782,32 +775,7 @@ This section provides illustrative, non-normative examples of Vouchsafe tokens u
 
 ---
 
-### 10.1 Vouch for an External JWT
-
-**Scenario:**
-A trusted verification service issues a Vouchsafe token referencing an external
-JWT. The purpose of the vouch is to assert that the external JWT represents a
-verified identity.
-
-**Vouch Token Claims:**
-
-```json
-{
-  "jti": "27aa21dc-7b76-4e9d-9f1f-6b287e81ac10",
-  "kind": "vch",
-  "iss": "urn:vouchsafe:verifyd.abc123xyz...",
-  "iss_key": "BASE64ENCODEDKEY==",
-  "sub": "f197e71d-bfe3-4263-b238-6fe8b9dcb7f0",
-  "vch_iss": "user@example.com",
-  "vch_sum": "c8c0f6c60b0bb17a3b16205e1c6c0676019998b7c206372f1128dc37018fa231",
-  "purpose": "email-verification",
-  "iat": 1714600000
-}
-```
-
----
-
-### 10.2 Attestation: Payment Confirmation
+### 10.1 Attestation: Payment Confirmation
 
 **Scenario:**
 A payment processor issues a Vouchsafe attestation indicating that a user
@@ -823,7 +791,6 @@ additional application-defined claims.
   "iss": "urn:vouchsafe:paymentnet.9c2xtrpx26dy44hfcf0dddf5r6ez5pwo",
   "iss_key": "BASE64ENCODEDPUBLICKEY==",
   "sub": "0a6b2f33-7ac1-4e4b-9b5d-bc5c3a2a91e7",
-  "vch_iss": "urn:vouchsafe:user.7gk20m4fw8kzzf2dn7a0xns60s64t83p",
   "purpose": "payment-confirmation",
   "amount": "19.95",
   "currency": "USD",
@@ -837,7 +804,7 @@ additional application-defined claims.
 
 ---
 
-### 10.3 Vouch for Another Vouchsafe Token
+### 10.2 Vouch for Another Vouchsafe Token
 
 **Scenario:**
 A Vouchsafe token is issued to assert trust in another signed Vouchsafe token. The vouch includes a specific `purpose` to limit delegated authority.
@@ -860,7 +827,7 @@ A Vouchsafe token is issued to assert trust in another signed Vouchsafe token. T
 
 ---
 
-### 10.4 Revocation: Specific Token
+### 10.3 Revocation: Specific Token
 
 **Scenario:**
 A Vouchsafe token is issued to revoke a previously issued vouch by the same
