@@ -22,10 +22,10 @@ external resolution mechanisms.
 
 Vouchsafe tokens support the following use cases:
 
-* Vouching for an arbitrary (non-vouchsafe) JWT.
 * Issuing a verifiable attestation regarding an identity.
 * Delegating trust through chaining of Vouchsafe tokens.
 * Revoking a previously issued vouch or all vouches for a subject.
+* Permanently destroying an existing identity.
 
 This specification defines the required and optional claims for each token
 type, validation requirements, and the semantics associated with chaining and
@@ -191,16 +191,9 @@ These fields **MUST** be present in all Vouchsafe tokens (`kind: "vch"`), and
 
 ### 5.1 `iss`: Identity of the Issuer
 
-For Vouchsafe tokens:
-
 * **MUST** be a valid [Vouchsafe Identifier](#) — a URN of the form `urn:vouchsafe:<label>.<base32-hash>`
 * **MUST** match the `iss_key` by computing the SHA-256 hash of the extracted raw key bytes and base32-encoding the result
-* **MUST** identify the signing key for the token
-
-For non-Vouchsafe tokens (external JWTs being vouched for):
-
-* **MAY** be a Vouchsafe URN to support trust portability and interoperability
-* **MAY** use other formats (e.g., email addresses, URLs, opaque strings) if required by the existing application
+* **MUST** identify the signing principal for the token
 
 ### 5.2 `jti`: Token Identifier
 
@@ -231,88 +224,14 @@ same signature and identity validation mechanism as described in Sections 3–5.
 
 The recognized token types are:
 
-1. [Vouch for a Non-Vouchsafe JWT](#61-vouch-for-a-non-vouchsafe-jwt): Asserts trust in an external JWT that is not itself a Vouchsafe token.
-2. [Vouchsafe Attestation](#62-vouchsafe-attestation): Declares verifiable claims about an identity.
-3. [Vouch for Another Vouchsafe Token](#63-vouch-for-another-vouchsafe-token): Establishes a delegation link by endorsing a prior Vouchsafe token.
-4. [Revocation](#64-revocation): Invalidates a previously issued vouch.
-5. [Burn](#65-burn): Permanently Invalidates an identity
+1. [Vouchsafe Attestation](#62-vouchsafe-attestation): Declares verifiable claims about an identity.
+2. [Vouch for Another Vouchsafe Token](#63-vouch-for-another-vouchsafe-token): Establishes a delegation link by endorsing a prior Vouchsafe token.
+3. [Revocation](#64-revocation): Invalidates a previously issued vouch.
+4. [Burn](#65-burn): Permanently Invalidates an identity
 
 ---
 
-## 6.1 Vouch for a Non-Vouchsafe JWT
-
-A token that endorses an external JWT, asserting trust in its signer and
-contents. This allows Vouchsafe to layer verifiable trust onto existing
-systems.
-
-### Required Claims
-
-| Claim     | Description                                                                                        |
-| --------- | -------------------------------------------------------------------------------------------------- |
-| `iss`     | MUST be a valid Vouchsafe URN. Identifies the signer of the vouch.                                 |
-| `iss_key` | Base64-encoded DER public key that MUST match the `iss` identifier and verify the token signature. |
-| `jti`     | Unique identifier for this vouch token (UUID).                                                     |
-| `sub`     | MUST be the `jti` of the external JWT being vouched for.                                           |
-| `vch_iss` | MUST match the `iss` of the token being vouched for.                                               |
-| `vch_sum` | MUST be the content hash of the full JWT being vouched for, including header and signature.        |
-| `iat`     | UNIX timestamp when this token was issued.                                                         |
-| `kind`    | MUST be `"vch"`.                                                                                   |
-
----
-
-### Optional / Recommended Claims
-
-| Claim     | Description                                                                                                       |
-| --------- | ----------------------------------------------------------------------------------------------------------------- |
-| `purpose` | RECOMMENDED. A space-separated list of permitted uses for the vouched-for token (e.g., `msg-signing store-data`). |
-| `sub_key` | RECOMMENDED. Base64-encoded DER public key of the subject, if the external token does not include `iss_key`.          |
-| `exp`     | Optional expiration timestamp. If present, the vouch is considered invalid after this time.                       |
-
----
-
-### Semantics
-
-* This token **does not require** the external JWT to be aware of or compatible
-  with Vouchsafe.
-* Trust is scoped to the referenced `jti` of the external token, **not the
-  identity as a whole**.
-* The `vch_sum` ensures that the vouched-for token has not been modified.
-* If `sub_key` is provided, verifiers MAY use it to validate the external token
-  if it has no embedded key.
-* The external JWT **MUST include a valid `jti` field**. If a JWT does not
-  contain a `jti`, it **cannot be vouched for**, as there is no stable
-  identifier to reference.
-
-### Example
-
-#### External JWT (Token B):
-
-```json
-{
-  "iss": "user@example.com",
-  "jti": "b81b6e6d-c24e-4c9e-b37f-d8a12a5e7609",
-  "sub": "user-claim",
-  "email": "user@example.com"
-}
-```
-
-#### Vouch Token (Token A):
-
-```json
-{
-  "iss": "urn:vouchsafe:alice.4z2vjf6zjk3j3xkwcu58ftwks61uyd4a",
-  "iss_key": "BASE64ENCODEDPUBLICKEY==",
-  "jti": "16db370d-96bb-432c-94b4-19d5808780ec",
-  "sub": "b81b6e6d-c24e-4c9e-b37f-d8a12a5e7609",
-  "vch_iss": "user@example.com",
-  "vch_sum": "3e9a...e7d5",
-  "purpose": "identity-verification",
-  "iat": 1714600000,
-  "kind": "vch"
-}
-```
-
-## 6.2 Vouchsafe Attestation
+## 6.1 Vouchsafe Attestation
 
 A token that allows a Vouchsafe identity to assert verifiable claims about
 another identity or subject. Unlike vouches, attestations do not reference an
@@ -326,7 +245,6 @@ external token. The statement exists entirely within the token itself.
 | `iss_key` | Base64-encoded DER public key that MUST match the `iss` identifier and verify the token signature. |
 | `jti`     | Unique identifier for this token (UUID).                                                           |
 | `sub`     | MUST be equal to the token’s own `jti`. Indicates that the token is self-referential.              |
-| `vch_iss` | MUST identify the subject of the attestation. This is the identity being attested to.              |
 | `iat`     | UNIX timestamp indicating when the token was issued.                                               |
 | `kind`    | MUST be `"vch"`.                                                                                   |
 
@@ -346,12 +264,10 @@ external token. The statement exists entirely within the token itself.
 
 * The `sub` claim MUST equal the token’s own `jti`. This indicates that the
   attestation refers to itself, rather than a separate subject token.
-* The `vch_iss` claim identifies the entity being attested to. It MAY be a
-  Vouchsafe URN or other identity format depending on the application. It MAY 
-  be the same as the `iss` claim.
 * The token MAY include arbitrary claims that assert attributes or facts about
   the subject.
 * The `purpose` claim MAY be used to scope or categorize the statement.
+* The `vch_iss` claim MUST NOT be present, as there is no referenced token being vouched for.
 * The `vch_sum` claim MUST NOT be present, as there is no referenced token being vouched for.
 * The `revokes` claim MUST NOT be present, as there is no referenced token being revoked.
 
@@ -371,8 +287,7 @@ external token. The statement exists entirely within the token itself.
 }
 ```
 
-
-## 6.3 Vouch for Another Vouchsafe Token
+## 6.2 Vouch for Another Vouchsafe Token
 
 A token that asserts trust in a previously issued Vouchsafe token. This enables recursive delegation of trust across multiple identities and permits construction of verifiable trust graphs.
 
@@ -434,7 +349,7 @@ A token that asserts trust in a previously issued Vouchsafe token. This enables 
 
 ---
 
-## 6.4 Revocation
+## 6.3 Revocation
 
 A token that invalidates a previously issued vouch. Revocations apply to
 individual vouch tokens or to all vouches issued by the same identity for a
@@ -484,7 +399,7 @@ specific subject.
 }
 ```
 
-## 6.5 Burn - Permanently terminate identity
+## 6.4 Burn - Permanently terminate identity
 
 A **burn token** immediately and permanently invalidatres an identity. 
 Once a burn token is observed, the issuing identity MUST NOT be considered 
@@ -495,29 +410,28 @@ the relevant `iss`.
 
 A burn token is self-issued: the `burns` MUST be identical to the `iss`.
 
----
 
-## **Required Claims**
+### **Required Claims**
 
-| Claim     | Description                                                                                        |
-| --------- | -------------------------------------------------------------------------------------------------- |
-| `iss`     | MUST be a valid Vouchsafe URN. Identifies the identity being burned. MUST match the `sub` claim.   |
-| `iss_key` | Base64-encoded DER public key that MUST match the `iss` identifier and verify the token signature. |
-| `jti`     | Unique identifier for this burn token (UUID).                                                      |
-| `sub`     | MUST be equal to the token’s own `jti`. Indicates that the token is self-referential.              |
-| `burns`   | MUST equal `iss`. Indicates that the identity is burning **itself**.                               |
-| `iat`     | UNIX timestamp when this token was issued. MUST NOT be in the future relative to evaluation time.  |
-| `kind`    | MUST be `"vch"`.                                                                                   |
+| Claim     | Description                                                                                                    |
+| --------- | -------------------------------------------------------------------------------------------------------------- |
+| `iss`     | MUST be a valid Vouchsafe URN. Identifies the identity being burned. MUST match the `sub` claim.               |
+| `iss_key` | Base64-encoded DER public key that MUST match the `iss` identifier and verify the token signature.             |
+| `jti`     | Unique identifier for this burn token (UUID).                                                                  |
+| `sub`     | MUST be equal to the token’s own `jti`. Indicates that the token is self-referential.                          |
+| `burns`   | MUST equal `iss`. Indicates that the identity is burning **itself**.                                           |
+| `iat`     | MUST be the UNIX timestamp when this token was issued. MUST NOT be in the future relative to evaluation time.  |
+| `kind`    | MUST be `"vch"`.                                                                                               |
 
----
 
-## **Semantics**
+### **Semantics**
 
 * A burn token permanently retires the issuing identity for all **future** trust evaluations.
 * Past decisions regarding vouches, attestations, delegations, and revocations issued by the identity remain historically valid.
 * A burn token MUST take effect immediately upon observation, regardless of the value of `iat`.
 * Burn tokens MUST NOT retroactively invalidate past trust assertions.
 * Burn tokens MUST invalidate future trust assertions involving this iss.
+* Burn tokens MUST have a valid `iat`
 * If a burn token’s `iat` lies in the future relative to evaluation time, evaluators MUST treat the burn as effective immediately.
 * Once a valid burn token is received, all **subsequently evaluated** tokens signed by the same identity MUST be considered invalid, regardless of their `iat` or receipt time.
 * Burn tokens MUST have a `burns` field that is identical to `iss`.
@@ -528,7 +442,7 @@ A burn token is self-issued: the `burns` MUST be identical to the `iss`.
 
 ---
 
-## **Example**
+### **Example**
 
 ```json
 {
@@ -542,10 +456,7 @@ A burn token is self-issued: the `burns` MUST be identical to the `iss`.
 }
 ```
 
-
----
-
-## 7. Claim Reference Table
+## 6.5. Claim Reference Table
 
 This section provides a complete list of all claims defined in the Vouchsafe token format, along with their usage requirements based on token type.
 
@@ -563,27 +474,114 @@ This section provides a complete list of all claims defined in the Vouchsafe tok
 | `kind`            | string | MUST be `"vch"` for Vouchsafe tokens.                      | All tokens                        | Identifies token format                                |
 | `exp`             | number | Expiration timestamp (UNIX).                               | RECOMMENDED (except in revokes)   | After this time, the token is invalid                  |
 | `purpose`         | string | Space-separated list of permitted uses.                    | RECOMMENDED (vouch, attestation)  | Used for delegation filtering                          |
-| `sub_key`         | string | Public key of non-Vouchsafe subject (Base64 of DER encoded key). | Optional for external JWTs        | Enables verification if external token lacks `iss_key` |
 | Additional Claims | any    | Arbitrary claims outside the Vouchsafe Specification.      | Optional                          | MAY appear in any token, ignored by Vouchsafe tooling. |
 
 > Note that `exp` is STRONGLY RECOMMENDED in all vouch tokens except revokes and burns.
 > Revoke tokens MUST NOT include an `exp` claim.
 > Burn tokens MUST NOT include an `exp` claim.
 
----
-
 ### Usage by Token Type
 
-| Token Type                | `vch_iss` | `vch_sum` | `revokes` | `purpose` | `sub_key`  | `burns` |
-| ------------------------- | --------- | --------- | --------- | --------- | ---------- | ------- |
-| Vouch for external JWT    | X         | X         |           | R         | R          |         |
-| Vouchsafe attestation     | X         |           |           | R         |            |         |
-| Vouch for Vouchsafe token | X         | X         |           | R         |            |         |
-| Revocation                | X         | X         | X         |           |            |         |
-| Burn                      |           |           |           |           |            | X       |
+| Token Type                | `vch_iss` | `vch_sum` | `revokes` | `purpose` | `burns` |
+| ------------------------- | --------- | --------- | --------- | --------- | ------- |
+| Vouchsafe attestation     |           |           |           | R         |         |
+| Vouch for Vouchsafe token | X         | X         |           | R         |         |
+| Revocation                | X         | X         | X         |           |         |
+| Burn                      |           |           |           |           | X       |
 
 > X = REQUIRED - MUST be included 
 > R = RECOMMENDED - MAY be included
+
+
+## 7. Integrating Non-Vouchsafe Tokens
+
+External (non-Vouchsafe) tokens **MUST NOT** be used as the subject of a vouch.
+
+External data **MAY** be incorporated into a Vouchsafe system only by
+**wrapping** the data inside an attestation token.
+
+Wrapped data is treated as opaque and does not participate directly in
+Vouchsafe trust evaluation.
+
+### 7.1 General Requirements
+
+1. **External tokens MUST NOT be used as vouch subjects.**
+2. **External data MUST be wrapped in an attestation token to appear in a Vouchsafe evaluation set.**
+3. **Wrapped external data MUST be treated as opaque by evaluators.**
+4. **Evaluators MUST NOT validate or interpret external token signatures, issuers, lifetimes, or internal claims.**
+5. **Applications MAY validate external tokens at the application layer.**
+
+### 7.2 Integration Method A: Wrapped External Token (Direct Inclusion)
+
+An attestation token **MAY** wrap an external token directly as an
+application-defined claim.
+
+Example pattern:
+
+```json
+{
+  "iss": "urn:vouchsafe:issuer....",
+  "iss_key": "BASE64...",
+  "jti": "UUID",
+  "sub": "UUID",
+  "vch_iss": "external-source",
+  "purpose": "integration",
+  "wrapped": {
+    "external_token": "<opaque external token>"
+  },
+  "iat": 1714600000,
+  "kind": "vch"
+}
+```
+
+**Requirements:**
+
+* The wrapped token **MUST** be treated as an opaque, uninterpreted object.
+* Only the attestation token's own fields participate in evaluation.
+
+
+### 7.3 Integration Method B: Wrapped Reference to External Data
+
+An attestation token **MAY** wrap a reference to an external token rather than
+the token itself.
+
+Example pattern:
+
+```json
+{
+  "iss": "urn:vouchsafe:issuer....",
+  "iss_key": "BASE64...",
+  "jti": "UUID",
+  "sub": "UUID",
+  "vch_iss": "external-source",
+  "purpose": "integration",
+  "wrapped": {
+    "external_ref": {
+      "id": "opaque-identifier",
+      "hash": "sha256-of-external-object",
+      "type": "external-format-identifier"
+    }
+  },
+  "iat": 1714600000,
+  "kind": "vch"
+}
+```
+
+**Requirements:**
+
+* The `hash` value **MUST** uniquely identify the referenced object.
+* Evaluators **MUST** treat the reference as opaque metadata.
+* Evaluators **MUST NOT** dereference or retrieve external content.
+
+---
+
+### 7.4 Migration Recommendation
+
+Systems that rely on external tokens **SHOULD** wrap them in Vouchsafe
+attestations whenever integration is required, and **SHOULD** prefer native
+Vouchsafe tokens where possible for consistent and complete evaluation
+semantics.
+
 
 ## 8. Token Validation Procedure
 
@@ -604,7 +602,7 @@ every token MUST include:
 * `iss`, `iss_key`, `jti`, `sub`, `iat`, `kind`
 
 Additional required claims depend on the token type (see 
-[Section 7](#7-claim-reference-table)).
+[Section 6.5](#65-claim-reference-table)).
 
 #### Step 2: Verify `kind` is `"vch"`
 
@@ -655,15 +653,10 @@ Validate the token's internal logic:
   * `sub` MUST equal `jti`
   * No trust chaining is attempted
 
-* If vouching for a Vouchsafe token:
+* If the token is a **vouch**:
 
   * The target token MUST include `kind: "vch"`
   * Match `vch_iss` and `vch_sum` to the target token
-
-* If vouching for a non-Vouchsafe token:
-
-  * The target token `jti` must match `sub`
-  * `sub`, `vch_iss`, and `vch_sum` MUST match the original target of the vouch
 
 ---
 
