@@ -344,41 +344,66 @@ construction of verifiable trust graphs.
 
 ---
 
-## 6.3 Revocation
+## **6.3 Revocation**
 
-A token that invalidates a previously issued vouch. Revocations apply to
-individual vouch tokens or to all vouches issued by the same identity for a
-specific subject.
+A revocation token invalidates a previously issued Vouchsafe token.
+Revocations apply to:
 
-### Required Claims
+1. **Individual vouch tokens**, or
+2. **All prior vouches issued by the same identity for a specific subject**, or
+3. **Individual attestation tokens** (attestations MUST be revoked by explicit `jti`, and `"all"` MUST NOT be used for attestations).
 
-| Claim     | Description                                                                                                   |
-| --------- | ------------------------------------------------------------------------------------------------------------- |
-| `iss`     | MUST be a valid Vouchsafe URN. Identifies the signer of the revocation.                                       |
-| `iss_key` | Base64-encoded DER public key that MUST match the `iss` identifier and verify the token signature.            |
-| `jti`     | Unique identifier for this revocation token (UUID).                                                           |
-| `sub`     | `jti` of the original target of the previous vouch. MUST match the `sub` of the token(s) being revoked.       |
-| `revokes` | MUST be either the `jti` of a specific vouch token or the string `"all"` to revoke all vouches for `sub`.     |
-| `vch_iss` | `iss` of the original target of the previous vouch. MUST match the `vch_iss` of token(s) being revoked.       |
-| `vch_sum` | Hash of the original target of the previous vouch. MUST match the `vch_sum` of token(s) being revoked.        |
-| `iat`     | UNIX timestamp when this token was issued.                                                                    |
-| `kind`    | MUST be `"vch"`.                                                                                              |
+Revocations do not alter the target token itself; they invalidate the trust
+assertion or claim previously made by the revoker.
 
 ---
 
-### Semantics
+### **Required Claims**
 
-* A revocation token invalidates a previously issued vouch.
-* If `revokes` is a UUID, it MUST match the `jti` of a specific vouch previously issued by the same `iss`.
-* If `revokes` is the string `"all"`, all prior vouches issued by `iss` for the same `sub` (with matching `vch_iss` and `vch_sum`) are considered revoked.
-* Revocation tokens MUST be evaluated in conjunction with the original vouch token. A revoked vouch MUST be treated as invalid, even if it would otherwise be valid.
-* Revocation does not modify the target token itself; it modifies the trust assertion previously made about it.
-* Revocation tokens MUST NOT include an exp claim. Revocations take effect immediately upon issuance and are permanent.
-* if `nbf` is provided, the revoke MUST NOT be considered in trust chain evaluations until that time.
-* Additional claims SHOULD NOT be added to revoke tokens.
+| Claim     | Description                                                                                        |
+| --------- | -------------------------------------------------------------------------------------------------- |
+| `iss`     | MUST be a valid Vouchsafe URN. Identifies the signer of the revocation.                            |
+| `iss_key` | Base64-encoded DER public key that MUST match the `iss` identifier and verify the token signature. |
+| `jti`     | Unique identifier for this revocation token (UUID).                                                |
+| `sub`     | MUST equal the `jti` of the subject token.                                                         |
+| `revokes` | MUST be the `jti` of the specific token being revoked. For vouch tokens only, MAY be `"all"`.      |
+| `vch_iss` | MUST equal the `iss` of the subject token.                                                         |
+| `vch_sum` | MUST equal the content hash of the subject token.                                                  |
+| `iat`     | UNIX timestamp when this token was issued.                                                         |
+| `kind`    | MUST be `"vch"`.                                                                                   |
 
+---
 
-### Example
+### **Semantics**
+
+* A revocation token invalidates a previously issued Vouchsafe token.
+* When `revokes` is a UUID, evaluators MUST treat only that specific token (identified by `jti`, `vch_iss`, and `vch_sum`) as revoked.
+* When `revokes` is `"all"`, evaluators MUST revoke **all** vouch tokens previously issued by `iss` for the same subject (`sub`, `vch_iss`, `vch_sum`).
+  `"all"` MUST NOT be used when revoking attestation tokens.
+* Revocations MUST be content-addressed: `vch_iss` and `vch_sum` MUST match exactly those of the revokation target. 
+* Revocation does not modify or overwrite the target token; it removes the revoker's assertion from trust evaluation.
+* Revocation tokens MUST NOT include an `exp` claim. Revocations take effect immediately and are permanent.
+* If `nbf` is present, the revocation MUST NOT be considered until that time.
+* Additional claims SHOULD NOT be added to revocation tokens.
+
+### **Targeting Rules**
+
+* **Revoking Vouch Tokens**
+  For revocations targeting vouch tokens, `sub`, `vch_iss`, and `vch_sum` MUST match exactly the corresponding values in the vouch token being revoked.
+  If `revokes` is `"all"`, the revocation applies to all vouch tokens previously issued by the same `iss` with the same `sub`, `vch_iss`, and `vch_sum`.
+
+* **Revoking Attestation Tokens**
+  For revocations targeting attestation tokens, `sub`, `vch_iss`, and `vch_sum` MUST match exactly the corresponding values derived from the attestation token being revoked.
+  Specifically:
+
+  * `sub` MUST equal the attestation’s `sub` claim (which MUST equal its `jti`),
+  * `vch_iss` MUST equal the attestation’s `iss`,
+  * `vch_sum` MUST equal the content hash of the attestation token.
+  * The value `"all"` MUST NOT be used for `revokes` when revoking attestation tokens.
+
+---
+
+### **Example (Revoking a Vouch)**
 
 ```json
 {
@@ -393,6 +418,25 @@ specific subject.
   "kind": "vch"
 }
 ```
+
+---
+
+### **Example (Revoking an Attestation)**
+
+```json
+{
+  "iss": "urn:vouchsafe:bob.88t2kjfzq9p1cew6h5tr6mkq3a4b0m9p",
+  "iss_key": "BASE64ENCODEDPUBLICKEY==",
+  "jti": "6ff51aa3-040a-41a1-89cd-8b19c77260d0",
+  "sub": "90e98ed2-2b24-4a22-9985-35a2f23875b4",
+  "revokes": "90e98ed2-2b24-4a22-9985-35a2f23875b4",
+  "vch_iss": "urn:vouchsafe:bob.88t2kjfzq9p1cew6h5tr6mkq3a4b0m9p",
+  "vch_sum": "c4b9fd1a8f08f30fa3ba5bc4425f79066edb860f478ad98f03ede89ca59f0f14",
+  "iat": 1714612000,
+  "kind": "vch"
+}
+```
+
 
 ## 6.4 Burn - Permanently terminate identity
 
