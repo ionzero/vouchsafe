@@ -2,8 +2,8 @@
 
 **Author:** Jay Kuri  
 **Organization:** Ionzero  
-**Date:** 2025-11-17    
-**Version:** 1.4.0  
+**Date:** 2025-11-28    
+**Version:** 1.5.0  
 **Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla  
 
 ## 1. Introduction
@@ -43,7 +43,7 @@ they appear in **all capital letters** as shown.
 
 These terms indicate the level of requirement placed on implementers of this
 specification. Unless otherwise noted, **requirements apply only to tokens
-claiming `kind: "vch"`** and systems that validate them.
+claiming `kind: "vch:*"`** and systems that validate them.
 
 ---
 
@@ -58,7 +58,7 @@ All Vouchsafe tokens:
 
 * MUST be signed using an Ed25519 public-key.
 * MUST include a defined set of claims used for validation and trust graph construction.
-* MUST include a `kind` claim with the exact value `"vch"`.
+* MUST include a `kind` claim that begins with "vch:" and matches one of the types below.
 
 ### 3.1 Base Claims
 
@@ -71,7 +71,7 @@ Every Vouchsafe token MUST include the following claims:
 | `jti`     | string | Unique identifier for the token. MUST be a UUID, lowercase and hyphenated.                               |
 | `sub`     | string | The subject of the statement. The interpretation depends on the token type.                                               |
 | `iat`     | number | Time the token was issued, in UNIX timestamp format.                                                                      |
-| `kind`    | string | Token type indicator. MUST be `"vch"` for Vouchsafe tokens.                                                               |
+| `kind`    | string | Token type indicator. MUST begin with `"vch:"` for Vouchsafe tokens. Valid values are: `vch:attest` `vch:vouch` `vch:revoke` `vch:burn` |
 
 The `exp` (expiration time) claim is OPTIONAL but RECOMMENDED for all tokens 
 except revoke tokens.
@@ -89,7 +89,7 @@ token with a malformed or non-UUID `jti`.
   semantics of this claim depend on the token’s type.
 
 * The `kind` claim provides a format discriminator. This specification defines
-  only the value `"vch"`.
+  the values `vch:attest`, `vch:vouch`, `vch:revoke`, `vch:burn`.
 
 ---
 
@@ -151,28 +151,6 @@ policy.
 
 ---
 
-### 4.2 Identity-Centric Trust
-
-Vouchsafe tokens are identity-bound and self-verifying. Each token includes:
-
-* An **identity** (`iss`) represented as a Vouchsafe URN, derived from the public key
-* A **public key** (`iss_key`) that can be validated against the identity
-* A **digital signature** that proves the signer controls the corresponding private key
-
-Together, these fields ensure that the token was issued by a specific identity,
-and that the identity is provably bound to the key used for signing. No
-external key registry, trusted directory, or pre-agreed key mapping is
-required.
-
-This model allows verifiers to make trust decisions based on identities — not
-raw keys — and to verify those identities directly using the contents of the
-token itself.
-
-> A verifier may choose to trust `iss`, and thereby accept tokens it has signed.
-> If `iss` delegates trust to another party, that delegation is explicitly signed and scoped.
-
----
-
 ## 5. Identity and Token ID Guidelines
 
 Vouchsafe tokens use two core fields to establish authorship and uniqueness:
@@ -180,7 +158,7 @@ Vouchsafe tokens use two core fields to establish authorship and uniqueness:
 * `iss` — the identity of the token issuer
 * `jti` — a globally unique identifier for the token itself
 
-These fields **MUST** be present in all Vouchsafe tokens (`kind: "vch"`), and
+These fields **MUST** be present in all Vouchsafe tokens, and
 **SHOULD** be included in any external JWTs that are the subject of a vouch.
 
 > While Vouchsafe tokens define strict requirements to ensure offline
@@ -237,7 +215,7 @@ exists entirely within the token itself.
 | `jti`     | Unique identifier for this token (UUID).                                                           |
 | `sub`     | MUST be equal to the token’s own `jti`. Indicates that the token is self-referential.              |
 | `iat`     | UNIX timestamp indicating when the token was issued.                                               |
-| `kind`    | MUST be `"vch"`.                                                                                   |
+| `kind`    | MUST be `"vch:attest"`.                                                                                   |
 
 ---
 
@@ -261,6 +239,7 @@ exists entirely within the token itself.
 * The `vch_iss` claim MUST NOT be present, as there is no referenced token being vouched for.
 * The `vch_sum` claim MUST NOT be present, as there is no referenced token being vouched for.
 * The `revokes` claim MUST NOT be present, as there is no referenced token being revoked.
+* The `burns` claim MUST NOT be present.
 
 ### Example
 
@@ -273,7 +252,7 @@ exists entirely within the token itself.
   "purpose": "email-verification",
   "email": "user@example.com",
   "iat": 1714605000,
-  "kind": "vch"
+  "kind": "vch:attest"
 }
 ```
 
@@ -295,7 +274,7 @@ construction of verifiable trust graphs.
 | `vch_iss` | MUST match the `iss` of the token being vouched for. MUST be different from `iss`                  |
 | `vch_sum` | MUST be the content hash of the full target token (including header and signature).                |
 | `iat`     | UNIX timestamp when this token was issued.                                                         |
-| `kind`    | MUST be `"vch"`.                                                                                   |
+| `kind`    | MUST be `"vch:vouch"`.                                                                                   |
 
 ---
 
@@ -311,7 +290,7 @@ construction of verifiable trust graphs.
 ### Semantics
 
 * This token references a Vouchsafe token by its `jti`, `vch_iss`, and `vch_sum`.
-* The `vch_sum` claim MUST be a content hash of the full target token in it's encoded form,
+* The `vch_sum` claim MUST be a content hash of the full target token in its encoded form,
   including all header and payload fields and its signature.
 * Trust is scoped to the exact token referenced; if the referenced token is
   modified or reissued with a new `jti`, the vouch does not apply.
@@ -338,7 +317,7 @@ construction of verifiable trust graphs.
   "vch_sum": "a9b4f6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
   "purpose": "msg-signing",
   "iat": 1714608000,
-  "kind": "vch"
+  "kind": "vch:vouch"
 }
 ```
 
@@ -370,7 +349,7 @@ assertion or claim previously made by the revoker.
 | `vch_iss` | MUST equal the `iss` of the subject token.                                                         |
 | `vch_sum` | MUST equal the content hash of the subject token.                                                  |
 | `iat`     | UNIX timestamp when this token was issued.                                                         |
-| `kind`    | MUST be `"vch"`.                                                                                   |
+| `kind`    | MUST be `"vch:revoke"`.                                                                                   |
 
 ---
 
@@ -380,11 +359,12 @@ assertion or claim previously made by the revoker.
 * When `revokes` is a UUID, evaluators MUST treat only that specific token (identified by `jti`, `vch_iss`, and `vch_sum`) as revoked.
 * When `revokes` is `"all"`, evaluators MUST revoke **all** vouch tokens previously issued by `iss` for the same subject (`sub`, `vch_iss`, `vch_sum`).
   `"all"` MUST NOT be used when revoking attestation tokens.
-* Revocations MUST be content-addressed: `vch_iss` and `vch_sum` MUST match exactly those of the revokation target. 
+* Revocations MUST be content-addressed: `vch_iss` and `vch_sum` MUST match exactly those of the revocation target. 
 * Revocation does not modify or overwrite the target token; it removes the revoker's assertion from trust evaluation.
 * Revocation tokens MUST NOT include an `exp` claim. Revocations take effect immediately and are permanent.
 * If `nbf` is present, the revocation MUST NOT be considered until that time.
 * Additional claims SHOULD NOT be added to revocation tokens.
+* Revocations MUST NOT target Burn tokens (`vch:burn`) or Revoke tokens (`vch:revoke`)
 
 ### **Targeting Rules**
 
@@ -415,7 +395,7 @@ assertion or claim previously made by the revoker.
   "vch_iss": "urn:vouchsafe:carol.7b5xkrjq1d3xvsmddq6d58vccu7n07na",
   "vch_sum": "a9b4f6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
   "iat": 1714609000,
-  "kind": "vch"
+  "kind": "vch:revoke"
 }
 ```
 
@@ -433,14 +413,14 @@ assertion or claim previously made by the revoker.
   "vch_iss": "urn:vouchsafe:bob.88t2kjfzq9p1cew6h5tr6mkq3a4b0m9p",
   "vch_sum": "c4b9fd1a8f08f30fa3ba5bc4425f79066edb860f478ad98f03ede89ca59f0f14",
   "iat": 1714612000,
-  "kind": "vch"
+  "kind": "vch:revoke"
 }
 ```
 
 
 ## 6.4 Burn - Permanently terminate identity
 
-A **burn token** immediately and permanently invalidatres an identity. 
+A **burn token** immediately and permanently invalidates an identity. 
 Once a burn token is observed, the issuing identity MUST NOT be considered 
 trustworthy for any **future** trust evaluations. Burn tokens do 
 **not** retroactively invalidate previous trust decisions. Burn tokens 
@@ -460,7 +440,7 @@ A burn token is self-issued: the `burns` MUST be identical to the `iss`.
 | `sub`     | MUST be equal to the token’s own `jti`. Indicates that the token is self-referential.                          |
 | `burns`   | MUST equal `iss`. Indicates that the identity is burning **itself**.                                           |
 | `iat`     | MUST be the UNIX timestamp when this token was issued. MUST NOT be in the future relative to evaluation time.  |
-| `kind`    | MUST be `"vch"`.                                                                                               |
+| `kind`    | MUST be `"vch:burn"`.                                                                                               |
 
 
 ### **Semantics**
@@ -477,7 +457,7 @@ A burn token is self-issued: the `burns` MUST be identical to the `iss`.
 * Burn tokens with a `burns` field that is not identical to `iss` are invalid and MUST be discarded.
 * Burn tokens MUST NOT include `revokes`, `vch_iss`, `vch_sum`, or any claims associated with vouch revocation.
 * Burn tokens MUST NOT include an `exp` claim. Burns are permanent and irrevocable.
-* Additional claims MUST NOT be added to burn tokens.
+* Burn tokens MAY include additional claims but they MUST be ignored by evaluators.
 
 ---
 
@@ -491,7 +471,7 @@ A burn token is self-issued: the `burns` MUST be identical to the `iss`.
   "sub": "b0c4d8b1-8e74-4c33-b723-2af0d91ad31e",
   "burns": "urn:vouchsafe:alice.4z2vjf6zjk3j3xkwcu58ftwks61uyd4a",
   "iat": 1714702000,
-  "kind": "vch"
+  "kind": "vch:burn"
 }
 ```
 
@@ -510,7 +490,7 @@ This section provides a complete list of all claims defined in the Vouchsafe tok
 | `revokes`         | string | Target of revocation: either a vouch `jti`, or `"all"`.    | Revocation only                   | Must refer to vouch by same `iss`                      |
 | `burns`           | string | MUST equal `iss`           | Burn only                     | Must be same as `iss`, Burns act on the issuer's identity only.                            |
 | `iat`             | number | Issued-at timestamp (UNIX).                                | All tokens                        | Used for ordering, expiration, revocation              |
-| `kind`            | string | MUST be `"vch"` for Vouchsafe tokens.                      | All tokens                        | Identifies token format                                |
+| `kind`            | string | MUST begin with `"vch:"` and be one of the defined types   | All tokens                        | Identifies token format                                |
 | `exp`             | number | Expiration timestamp (UNIX).                               | RECOMMENDED (except in revokes)   | After this time, the token is invalid                  |
 | `purpose`         | string | Space-separated list of permitted uses.                    | RECOMMENDED (vouch, attestation)  | Used for delegation filtering                          |
 | Additional Claims | any    | Arbitrary claims outside the Vouchsafe Specification.      | Optional                          | MAY appear in any token, ignored by Vouchsafe tooling. |
@@ -568,7 +548,7 @@ Example pattern:
     "external_token": "<opaque external token>"
   },
   "iat": 1714600000,
-  "kind": "vch"
+  "kind": "vch:attest"
 }
 ```
 
@@ -600,7 +580,7 @@ Example pattern:
     }
   },
   "iat": 1714600000,
-  "kind": "vch"
+  "kind": "vch:attest"
 }
 ```
 
@@ -623,7 +603,7 @@ semantics.
 ## 8. Token Validation Procedure
 
 This section describes the steps a verifier SHOULD follow to validate a
-Vouchsafe token (`kind: "vch"`). The process includes identity verification,
+Vouchsafe token (`kind: "vch:*"`). The process includes identity verification,
 signature validation, field consistency checks, and — where applicable — vouch
 graph resolution and revocation handling.
 
@@ -641,9 +621,10 @@ every token MUST include:
 Additional required claims depend on the token type (see 
 [Section 6.5](#65-claim-reference-table)).
 
-#### Step 2: Verify `kind` is `"vch"`
+#### Step 2: Verify `kind` is `"vch:*"`
 
-Reject any token where `kind` is missing or not exactly `"vch"`.
+Reject any token where `kind` is missing or not one of the allowed 
+types: `"vch:attest"` `"vch:vouch"` `"vch:revoke"` `"vch:burn"`
 
 #### Step 3: Validate `iss` and `iss_key`
 
@@ -679,21 +660,30 @@ malformed.
 
 Validate the token's internal logic:
 
-* If the token is a **revocation**, ensure:
-
-  * `revokes` MUST be present
-  * `revokes` MUST be either a valid UUID or `"all"`
-  * `sub`, `vch_iss`, and `vch_sum` MUST match the original target of the vouch
-
 * If the token is an **attestation**, ensure:
 
+  * The token MUST include `kind: "vch:attest"`
   * `sub` MUST equal `jti`
   * No trust chaining is attempted
 
 * If the token is a **vouch**:
 
-  * The target token MUST include `kind: "vch"`
+  * The token MUST include `kind: "vch:vouch"`
   * Match `vch_iss` and `vch_sum` to the target token
+
+* If the token is a **revocation**, ensure:
+
+  * The token MUST include `kind: "vch:revoke"`
+  * `revokes` MUST be present
+  * `revokes` MUST be either a valid UUID or `"all"`
+  * `sub`, `vch_iss`, and `vch_sum` MUST match the original target of the vouch
+
+* If the token is a **burn**, ensure:
+
+  * The token MUST include `kind: "vch:burn"`
+  * `sub` MUST equal `jti`
+  * `burns` MUST equal `iss`
+  * No trust chaining is attempted
 
 ---
 
@@ -831,7 +821,7 @@ additional application-defined claims.
 ```json
 {
   "jti": "0a6b2f33-7ac1-4e4b-9b5d-bc5c3a2a91e7",
-  "kind": "vch",
+  "kind": "vch:attest",
   "iss": "urn:vouchsafe:paymentnet.9c2xtrpx26dy44hfcf0dddf5r6ez5pwo",
   "iss_key": "BASE64ENCODEDPUBLICKEY==",
   "sub": "0a6b2f33-7ac1-4e4b-9b5d-bc5c3a2a91e7",
@@ -865,7 +855,7 @@ A Vouchsafe token is issued to assert trust in another signed Vouchsafe token. T
   "vch_sum": "a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
   "purpose": "msg-signing",
   "iat": 1714602000,
-  "kind": "vch"
+  "kind": "vch:vouch"
 }
 ```
 
@@ -889,7 +879,7 @@ issuer. The revocation is scoped to the specific token identified by its `jti`.
   "vch_iss": "urn:vouchsafe:agent.4dkf0g2wue68xhzxnslkh9sbk08e4a9b",
   "vch_sum": "a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530",
   "iat": 1714603000,
-  "kind": "vch"
+  "kind": "vch:revoke"
 }
 ```
 
@@ -909,24 +899,23 @@ contents. The following conventions apply:
 
 * The hash algorithm used in this specification is **SHA-256** unless otherwise specified.
 * Hash outputs MUST be encoded using lowercase, hexadecimal.
+* This hexadecimal encoding requirement applies only to `vch_sum` and NOT to the issuer key hash used in Vouchsafe URNs (which use Base32).
 * Hash values MUST be expressed using the `vch_sum` claim in the following format:
 
 ```
-<hexadecimal-encoded-hash>[.algorithm]
+<hexadecimal-encoded-hash>
 ```
 
-The `<hexadecimal-encoded-hash>` portion MUST be lowercase. The algorithm, if omitted,
-is assumed to be sha256. 
+The `<hexadecimal-encoded-hash>` portion MUST be lowercase. 
 
-#### Examples
+#### Example
 
 ```
 a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530
-
-a9f4d6c1cc69eac90a63a8df7b0f06cce3ed62ed65031c81ff4c5b8cbd2f5530.sha256
 ```
 
-All compliant implementations MUST support `sha256`. Support for alternate hash
+
+All compliant implementations MUST use **SHA-256**. Support for alternate hash
 algorithms is not defined in this version of the specification and MAY be
 introduced in a future revision.
 
@@ -981,8 +970,8 @@ Support for additional algorithms MAY be introduced in future revisions of this 
 
 ## 12. Versioning and Compatibility
 
-This document defines version 1.3 of the Vouchsafe token format. All tokens
-conforming to this specification MUST include the claim `kind: "vch"` and MUST
+This document defines version 1.5 of the Vouchsafe token format. All tokens
+conforming to this specification MUST include the claim `kind: "vch:*"` and MUST
 adhere to the structural, cryptographic, and validation requirements described
 herein.
 
@@ -1027,6 +1016,16 @@ revoke the prior token and issue a new token with revised parameters.
 ---
 
 ## Appendix A. Changelog
+
+### Version 1.5.0 - 2025-11-28
+
+* Revise kind handling to clearly differentiate between different token types
+* Remove redundancy and clean up semantic rules where needed
+
+### Version 1.4.0 - 2025-11-07
+
+* Add Burn tokens
+* Remove vouch for external tokens in favor of wrapping / referencing external tokens
 
 ### Version 1.3.1 - 2025-06-27
 
