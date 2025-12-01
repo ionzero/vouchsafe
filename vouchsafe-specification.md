@@ -2,8 +2,8 @@
 
 **Author:** Jay Kuri  
 **Organization:** Ionzero  
-**Date:** 2025-11-28    
-**Version:** 1.5.0  
+**Date:** 2025-12-01    
+**Version:** 2.0.0  
 **Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla  
 
 ## 1. Introduction
@@ -1028,6 +1028,11 @@ revoke the prior token and issue a new token with revised parameters.
 ---
 
 ## Appendix A. Changelog
+
+### Version 2.0.0 - 2025-12-01
+
+* Remove restriction on self-vouching
+* Clarify that revokes may only target vouches made by the same issuer
 
 ### Version 1.5.0 - 2025-11-28
 
