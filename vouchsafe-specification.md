@@ -258,10 +258,21 @@ exists entirely within the token itself.
 
 ## 6.2 Vouch for Another Vouchsafe Token
 
-A token that asserts trust in a previously issued Vouchsafe token. This enables
-recursive delegation of trust across multiple identities and permits
-construction of verifiable trust graphs. 
+A vouch token asserts a signed relationship to a previously issued Vouchsafe
+token. This enables construction of verifiable, content-addressed trust graphs
+and supports recursive delegation across multiple identities. The `purpose`
+field provides a mechanism for attenuating scope; vouch tokens may only reduce
+scope or leave it unchanged. Vouch tokens MUST NOT expand scope.
 
+Vouch tokens MAY reference any Vouchsafe token type. The semantics of the
+referenced token are not altered by being vouched for. A vouch expresses only
+that the issuer is making a signed statement about that specific token.
+
+While a vouch is commonly used for one party to vouch for another's statement, 
+self-vouching is permitted. A vouch token MAY reference another token issued by
+the same `iss`. All vouches, including self-vouches, are treated as
+content-linking statements and do not confer additional authority or privileges
+on their own. Standard attenuation and trust-evaluation rules apply.
 
 ### Required Claims
 
@@ -271,10 +282,10 @@ construction of verifiable trust graphs.
 | `iss_key` | Base64-encoded DER public key that MUST match the `iss` identifier and verify the token signature. |
 | `jti`     | Unique identifier for this vouch token (UUID).                                                     |
 | `sub`     | MUST be the `jti` of the Vouchsafe token being vouched for.                                        |
-| `vch_iss` | MUST match the `iss` of the token being vouched for. MUST be different from `iss`                  |
+| `vch_iss` | MUST match the `iss` of the token being vouched for.                                               |
 | `vch_sum` | MUST be the content hash of the full target token (including header and signature).                |
 | `iat`     | UNIX timestamp when this token was issued.                                                         |
-| `kind`    | MUST be `"vch:vouch"`.                                                                                   |
+| `kind`    | MUST be `"vch:vouch"`.                                                                             |
 
 ---
 
@@ -297,11 +308,6 @@ construction of verifiable trust graphs.
 * Chained delegation MAY be implemented by issuing vouches that reference other
   Vouchsafe vouch tokens. In such chains, `purpose` filtering applies at each
   link (see Section 9).
-* Vouch tokens MUST NOT vouch for another token issued by the same iss.  If a
-  revision is needed, the correct approach is to issue a revocation targeting
-  the original vouch, followed by a new vouch for the same subject token.
-  Alternatively, multiple vouches for the original token may coexist if they
-  serve different purposes. 
 * Vouch tokens may only vouch for other Vouchsafe tokens. Non-Vouchsafe tokens
   MUST be wrapped inside attestations and cannot appear as `sub` in vouch tokens.
 
@@ -333,7 +339,11 @@ Revocations apply to:
 3. **Individual attestation tokens** (attestations MUST be revoked by explicit `jti`, and `"all"` MUST NOT be used for attestations).
 
 Revocations do not alter the target token itself; they invalidate the trust
-assertion or claim previously made by the revoker.
+assertion or claim previously made by the revoker and effectively remove
+the target token from the graph for purposes of evaluation.
+
+Revocation represents an issuer retracting its own previous statements, as
+such, revocation tokens MUST NOT revoke tokens issued by another issuer.
 
 ---
 
@@ -349,7 +359,7 @@ assertion or claim previously made by the revoker.
 | `vch_iss` | MUST equal the `iss` of the subject token.                                                         |
 | `vch_sum` | MUST equal the content hash of the subject token.                                                  |
 | `iat`     | UNIX timestamp when this token was issued.                                                         |
-| `kind`    | MUST be `"vch:revoke"`.                                                                                   |
+| `kind`    | MUST be `"vch:revoke"`.                                                                            |
 
 ---
 
@@ -361,6 +371,8 @@ assertion or claim previously made by the revoker.
   `"all"` MUST NOT be used when revoking attestation tokens.
 * Revocations MUST be content-addressed: `vch_iss` and `vch_sum` MUST match exactly those of the revocation target. 
 * Revocation does not modify or overwrite the target token; it removes the revoker's assertion from trust evaluation.
+* A Revocation token MUST NOT include an `exp` claim. Revocations take effect immediately and are permanent.
+* A revocation token MUST only revoke tokens whose `iss` value exactly matches the revocation token’s own `iss` value. A principal may only retract its own previous statements.
 * Revocation tokens MUST NOT include an `exp` claim. Revocations take effect immediately and are permanent.
 * If `nbf` is present, the revocation MUST NOT be considered until that time.
 * Additional claims SHOULD NOT be added to revocation tokens.
