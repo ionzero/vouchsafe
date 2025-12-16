@@ -126,7 +126,7 @@ urn:vouchsafe:<label>.<base32-hash>
 Where:
 
 * `<label>` is an application-defined display tag (see [Section 2.1](#21-label-format)).
-* `<base32-hash>` is the Base32-encoded output of the hash function.
+* `<base32-hash>` is the lowercase, unpadded Base32 encoding of the SHA-256 hash of the issuer’s raw public key bytes, as defined in [RFC 4648, Section 6](https://datatracker.ietf.org/doc/html/rfc4648#section-6).
 
 ---
 
