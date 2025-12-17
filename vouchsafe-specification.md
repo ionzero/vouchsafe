@@ -1,10 +1,10 @@
 # Vouchsafe Token Format Specification
 
-**Author:** Jay Kuri  
-**Organization:** Ionzero  
-**Date:** 2025-12-01    
-**Version:** 2.0.0  
-**Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla  
+**Author:** Jay Kuri
+**Organization:** Ionzero
+**Date:** 2025-12-17
+**Version:** 2.0.1
+**Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla
 
 ## 1. Introduction
 
@@ -264,9 +264,13 @@ and supports recursive delegation across multiple identities. The `purpose`
 field provides a mechanism for attenuating scope; vouch tokens may only reduce
 scope or leave it unchanged. Vouch tokens MUST NOT expand scope.
 
-Vouch tokens MAY reference any Vouchsafe token type. The semantics of the
-referenced token are not altered by being vouched for. A vouch expresses only
-that the issuer is making a signed statement about that specific token.
+Vouch tokens MUST reference only tokens of kind 'vch:attest' or 'vch:vouch'.
+References to tokens of kind 'vch:revoke' or 'vch:burn' are invalid and MUST
+be rejected by conforming implementations.
+
+The semantics of the referenced token are not altered by being vouched for. A
+vouch expresses only that the issuer is making a signed statement about that
+specific token.
 
 While a vouch is commonly used for one party to vouch for another's statement, 
 self-vouching is permitted. A vouch token MAY reference another token issued by

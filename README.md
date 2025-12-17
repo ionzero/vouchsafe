@@ -3,7 +3,8 @@
 ## What Is Vouchsafe? 
 
 Vouchsafe is a new way to represent identity and trust in your system — one
-that doesn’t require accounts, logins, or shared databases.
+that doesn’t require accounts, logins, or shared databases. It is an
+implementation of the ZI-CG identity trust model.
 
 At its core, a **Vouchsafe ID** is just a string like
 `urn:vouchsafe:alice.4z2vjf6...` that’s mathematically tied to a public key.
@@ -120,7 +121,7 @@ The following documents define the Vouchsafe model:
 - [Vouchsafe Identity Specification](./vouchsafe-identity-specification.md)  
   *Defines the `urn:vouchsafe` format, validation rules, and comparison to other identity models.*
 
-- [Vouchsafe Token Format](./vouchsafe-specification-v1.3.md)  
+- [Vouchsafe Token Format](./vouchsafe-specification.md)  
   *Specifies the `vch` token format, required claims, signature rules, and trust graph semantics.*
 
 *Language libraries and CLI tools coming soon.*
