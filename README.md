@@ -3,28 +3,28 @@
 ## What Is Vouchsafe? 
 
 Vouchsafe is a new way to represent identity and trust in your system - one
-that doesn’t require accounts, logins, or shared databases. **Vouchsafe is the
+that doesn't require accounts, logins, or shared databases. **Vouchsafe is the
 first complete, operational instantiation of the Zero-Infrastructure Capability
 Graph (ZI-CG) model**.
 
 At its core, a **Vouchsafe ID** is just a string like
-`urn:vouchsafe:alice.4z2vjf6...` that’s mathematically tied to a public key.
+`urn:vouchsafe:alice.4z2vjf6...` that's mathematically tied to a public key.
 Anyone with the private key can **sign something to prove they control that
 identity**, and anyone else can verify it using only the ID and the public key.
-No servers, no network calls, no “is this token valid?” lookup.
+No servers, no network calls, no "is this token valid?" lookup.
 
 On top of that, Vouchsafe defines a **token format built on JWT** - called a
 *vouch token* - for expressing trust relationships:
 
-- “I trust this key to act on my behalf”
-- “Here’s a claim I verified about someone else”
-- “That old key isn’t valid anymore”
+- "I trust this key to act on my behalf"
+- "Here's a claim I verified about someone else"
+- "That old key isn't valid anymore"
 
 These tokens work with any JWT library, are easy to verify offline, and can be
-passed around between systems - even ones that don’t know each other - with no
+passed around between systems - even ones that don't know each other - with no
 shared infrastructure.
 
-**If you’ve used JWTs for sessions, the format will look familiar but the
+**If you've used JWTs for sessions, the format will look familiar but the
 semantics are different.** In Vouchsafe, tokens are not session artifacts,
 authorization proofs, or bearer credentials; they are persistent,
 self-verifying trust statements that can be evaluated anywhere, without a
@@ -36,13 +36,13 @@ Vouchsafe is designed for systems where identity and trust need to move freely
 - across services, networks, or devices - without depending on centralized
 directories, shared databases, or real-time validation.
 
-It’s ideal for decentralized protocols, cross-platform apps, offline
+It's ideal for decentralized protocols, cross-platform apps, offline
 interactions - or anywhere you need different systems to agree on identity,
 capability, and permission. Vouchsafe simplifies these integrations by
 replacing custom trust logic with cryptographically verifiable tokens that work
 the same way everywhere.
 
-It’s also great for **simplifying traditional systems** - by making token
+It's also great for **simplifying traditional systems** - by making token
 verification easier, reducing key distribution headaches, and letting you
 represent trust relationships in a standard, portable way that is simple and
 straightforward to reason about.
@@ -51,16 +51,16 @@ straightforward to reason about.
 
 Most modern identity systems work like a high-security bank. Every time you
 want to do anything - open a door, access a file, make a request - someone
-calls a central security desk to ask, *“Is this person allowed to do this?”* If
+calls a central security desk to ask, *"Is this person allowed to do this?"* If
 the phones are down or the guard is on break, the system stops.
 
 Vouchsafe is more like a festival. You show your ID once at the gate, buy your
 beer tokens, and from then on you just hand over tokens when you need
 something. Nobody makes a call. Nobody checks a central list. The tokens are
-cryptographically signed and self-validating - they can’t be faked, and they
-don’t need to be looked up.
+cryptographically signed and self-validating - they can't be faked, and they
+don't need to be looked up.
 
-That’s the difference: with Vouchsafe, **trust travels with the user.**
+That's the difference: with Vouchsafe, **trust travels with the user.**
 
 Under the hood, this works because all trust-relevant information is expressed
 as signed, immutable tokens. These tokens reference each other to form a
@@ -73,15 +73,15 @@ If you have the tokens, you can make the decision. Nothing else is required.
 ## The Portable Trust Layer
 
 Trust is fundamental to most systems - even simple ones. But trust is often
-implied, invisible, or tied to infrastructure that’s hard to change.
+implied, invisible, or tied to infrastructure that's hard to change.
 
 Because trust in Vouchsafe is represented as signed, self-contained statements,
 it naturally forms a **portable trust layer**, one that works across systems,
 across keys, and even across time.
 
 
-- **Delegation** - “I trust this key to act on my behalf to perform this action.”
-- **Revocation** - “That key is no longer valid.”
+- **Delegation** - "I trust this key to act on my behalf to perform this action."
+- **Revocation** - "That key is no longer valid."
 - **Chaining** - Tokens may reference other tokens, forming a trust or
   capability graph rather than a single linear chain.
 - **Interoperability** - No ecosystem, app or company lock-in. Works in any
@@ -122,7 +122,7 @@ Vouchsafe tokens are cryptographically signed trust assertions. They can express
 These tokens can reference other tokens, forming a directed capability graph
 that can be evaluated offline to determine effective authority.
 
-Each token includes the issuer’s identity and key, the subject of the trust
+Each token includes the issuer's identity and key, the subject of the trust
 statement, and an optional purpose - all verifiable offline using standard
 cryptographic tools. They are fully compatible with JWT libraries.
 
@@ -163,11 +163,11 @@ and we will be happy to link to it here.
 
 ## Get Involved
 
-Vouchsafe is in active development, and we’re looking for collaborators,
+Vouchsafe is in active development, and we're looking for collaborators,
 testers, and implementers.
 
-If you’re building **decentralized applications**, **peer-to-peer systems**, or
-systems that care about **identity, trust, and portable credentials**, we’d
+If you're building **decentralized applications**, **peer-to-peer systems**, or
+systems that care about **identity, trust, and portable credentials**, we'd
 love to hear from you.
 
 Questions, ideas, or contributions?  
