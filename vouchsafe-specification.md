@@ -461,14 +461,14 @@ A burn token is self-issued: the `burns` MUST be identical to the `iss`.
 
 ### **Semantics**
 
-* A burn token permanently retires the issuing identity for all **future** trust evaluations.
-* Past decisions regarding vouches, attestations, delegations, and revocations issued by the identity remain historically valid.
+* A burn token permanently retires the issuing identity for any trust evaluation in which the burn token is present.
+* Past decisions regarding vouches, attestations, delegations, and revocations issued by the identity remain historically valid only because those prior evaluations did not include the burn token.
 * A burn token MUST take effect immediately upon observation, regardless of the value of `iat`.
 * Burn tokens MUST NOT retroactively invalidate past trust assertions.
 * Burn tokens MUST invalidate future trust assertions involving this iss.
 * Burn tokens MUST have a valid `iat`
 * If a burn token’s `iat` lies in the future relative to evaluation time, evaluators MUST treat the burn as effective immediately.
-* Once a valid burn token is received, all **subsequently evaluated** tokens signed by the same identity MUST be considered invalid, regardless of their `iat` or receipt time.
+* Once a valid burn token is present in an evaluation set, all tokens signed by the same identity MUST be considered invalid, regardless of their `iat` or receipt time.
 * Burn tokens MUST have a `burns` field that is identical to `iss`.
 * Burn tokens with a `burns` field that is not identical to `iss` are invalid and MUST be discarded.
 * Burn tokens MUST NOT include `revokes`, `vch_iss`, `vch_sum`, or any claims associated with vouch revocation.
@@ -949,7 +949,7 @@ urn:vouchsafe:<label>.<base32-key-hash>
 
 Where:
 
-* `<label>` is a lowercase, human-readable identifier. It MAY contain the characters `a–z`, `0–9`, and hyphen (`-`). The label MUST NOT exceed 32 characters.
+* `<label>` is an opaque, human-readable identifier. It MUST be 3-32 characters and MAY contain the ASCII characters `a-z`, `A-Z`, `0-9`, hyphen (`-`), underscore (`_`), percent (`%`), and plus (`+`). Labels MAY be URL-encoded for display flexibility. The label MUST NOT contain a period (`.`).
 * `<base32-key-hash>` is the lowercase, unpadded Base32 encoding of the SHA-256 hash of the issuer’s raw public key bytes, as defined in [RFC 4648, Section 6](https://datatracker.ietf.org/doc/html/rfc4648#section-6).
 
 #### Example
@@ -1059,4 +1059,3 @@ revoke the prior token and issue a new token with revised parameters.
 * Initial public version of the Vouchsafe Token Format Specification.
 * Defines core claims, token types, validation rules, URN format, and trust graph semantics.
 * Includes examples and implementation guidance for offline verification, revocation, and delegation.
-
