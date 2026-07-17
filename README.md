@@ -4,8 +4,8 @@
 
 Vouchsafe is a new way to represent identity and trust in your system - one
 that doesn't require accounts, logins, or shared databases. **Vouchsafe is the
-first complete, operational instantiation of the Zero-Infrastructure Capability
-Graph (ZI-CG) model**.
+first complete, operational instantiation of the [Zero-Infrastructure Capability
+Graph (ZI-CG) model](https://arxiv.org/abs/2601.02254) **.
 
 At its core, a **Vouchsafe ID** is just a string like
 `urn:vouchsafe:alice.4z2vjf6...` that's mathematically tied to a public key.
@@ -18,7 +18,7 @@ On top of that, Vouchsafe defines a **token format built on JWT** - called a
 
 - "I trust this key to act on my behalf"
 - "Here's a claim I verified about someone else"
-- "That old key isn't valid anymore"
+- "That old identity isn't valid anymore"
 
 These tokens work with any JWT library, are easy to verify offline, and can be
 passed around between systems - even ones that don't know each other - with no
@@ -32,9 +32,9 @@ central database or authority.
 
 ## Why Vouchsafe?
 
-Vouchsafe is designed for systems where identity and trust need to move freely
-- across services, networks, or devices - without depending on centralized
-directories, shared databases, or real-time validation.
+Vouchsafe is designed for situations where identity and trust need
+to move freely - across services, networks, or devices - without depending on
+centralized directories, shared databases, or real-time validation.
 
 It's ideal for decentralized protocols, cross-platform apps, offline
 interactions - or anywhere you need different systems to agree on identity,
@@ -69,7 +69,6 @@ locally; without network access, shared state, or trusted infrastructure.
 
 If you have the tokens, you can make the decision. Nothing else is required.
 
-
 ## The Portable Trust Layer
 
 Trust is fundamental to most systems - even simple ones. But trust is often
@@ -79,8 +78,7 @@ Because trust in Vouchsafe is represented as signed, self-contained statements,
 it naturally forms a **portable trust layer**, one that works across systems,
 across keys, and even across time.
 
-
-- **Delegation** - "I trust this key to act on my behalf to perform this action."
+- **Delegation** - "I trust this identity to act on my behalf to perform this specific action."
 - **Revocation** - "That key is no longer valid."
 - **Chaining** - Tokens may reference other tokens, forming a trust or
   capability graph rather than a single linear chain.
@@ -118,6 +116,7 @@ Vouchsafe tokens are cryptographically signed trust assertions. They can express
 - Delegations (e.g. "this agent may act on my behalf")
 - Revocations (e.g. "that delegation is no longer valid")
 - Endorsements (e.g. "I trust this token and its claims")
+- Identity Burn (e.g. "My Identity is no longer safe and you **should not** trust it any longer")
 
 These tokens can reference other tokens, forming a directed capability graph
 that can be evaluated offline to determine effective authority.
@@ -135,6 +134,7 @@ cryptographic tools. They are fully compatible with JWT libraries.
 - Layer trust assertions onto existing JWTs (e.g., OAuth or OpenID tokens)  
 - Enable peer-to-peer or offline systems to verify credentials  
 - Revoke previously granted access without maintaining state  
+- Allow autonomous workers like AI Agents to self-initiate identity and coordinate trust.
 - Link external systems using a common, verifiable identity format  
 
 ## Specifications
@@ -148,7 +148,8 @@ ZI-CG-based trust model:
 - [Vouchsafe Token Format](./vouchsafe-specification.md)  
   *Specifies the `vch` token format, required claims, signature rules, and trust graph semantics.*
 
-*Language libraries and CLI tools coming soon.*
+- [Zero-Infrastructure Capability Graphs paper](https://arxiv.org/abs/2601.02254)
+  *The ZI-CG / Vouchsafe research paper and mathematical model.* 
 
 ## Implementations
 
@@ -160,6 +161,8 @@ below. Please contact us if you are working on a module for another language
 and we will be happy to link to it here.
 
 - [Javascript](https://github.com/ionzero/vouchsafe-js)
+
+*Additional Language libraries and CLI tools coming soon.*
 
 ## Get Involved
 
