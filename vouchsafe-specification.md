@@ -2,8 +2,8 @@
 
 **Author:** Jay Kuri
 **Organization:** Ionzero
-**Date:** 2025-12-17
-**Version:** 2.0.1
+**Date:** 2026-06-26
+**Version:** 2.1.0
 **Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla
 
 ## 1. Introduction

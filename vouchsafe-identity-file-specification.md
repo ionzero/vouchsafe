@@ -1,9 +1,10 @@
 # Vouchsafe Identity File Specification
 
-**Version:** 1.0.0  
-**Status:** Draft Specification  
-**Author:** Jay Kuri  
+**Version:** 2.1.0
+**Date:** 2026-08-12
+**Author:** Jay Kuri
 **Organization:** Ionzero
+**Vouchsafe ID:** urn:vouchsafe:jaykuri.6aublsnyy24dfa6vfil3gxekfcdnmscqvfrcyj4pvvensey6nhla
 
 ## 1. Introduction
 
